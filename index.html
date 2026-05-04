@@ -27,6 +27,8 @@ h2{color:#f0d060;margin-bottom:20px;font-size:22px;letter-spacing:1px}
 .btn:disabled{filter:brightness(.45);cursor:not-allowed}
 .btn-r{background:linear-gradient(135deg,#8b1010,#cc2828);color:#fff}
 .btn-g{background:linear-gradient(135deg,#0a6010,#18a828);color:#fff}
+.btn-half{background:linear-gradient(135deg,#1a4060,#2878c8);color:#fff}
+.btn-allin{background:linear-gradient(135deg,#6b1010,#cc2020);color:#fff}
 
 .bet-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .bet-num{font-size:18px}
@@ -167,6 +169,8 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
       <span class="bet-num">Einsatz: <strong id="sl-bet">10</strong></span>
       <button class="btn" onclick="slBet(1)">+1</button>
       <button class="btn" onclick="slBet(10)">+10</button>
+      <button class="btn btn-half" onclick="slSetBet(Math.floor(bal/2))">50%</button>
+      <button class="btn btn-allin" onclick="slSetBet(bal)">All In</button>
       <button class="btn" id="sl-btn" onclick="doSpin()">SPIN 🎰</button>
     </div>
     <div class="slots-pay">
@@ -196,6 +200,8 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
         <span class="bet-num">Einsatz: <strong id="bj-bet">20</strong></span>
         <button class="btn" onclick="bjB(1)">+1</button>
         <button class="btn" onclick="bjB(10)">+10</button>
+        <button class="btn btn-half" onclick="bjSetBet(Math.floor(bal/2))">50%</button>
+        <button class="btn btn-allin" onclick="bjSetBet(bal)">All In</button>
       </div>
       <button class="btn" id="bj-deal" onclick="bjDeal()">Deal</button>
       <button class="btn btn-g" id="bj-hit" onclick="bjHit()" disabled>Hit</button>
@@ -221,6 +227,8 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
         <span class="bet-num">Einsatz: <strong id="rou-bet">10</strong></span>
         <button class="btn" onclick="rouB(1)">+1</button>
         <button class="btn" onclick="rouB(10)">+10</button>
+        <button class="btn btn-half" onclick="rouSetBet(Math.floor(bal/2))">50%</button>
+        <button class="btn btn-allin" onclick="rouSetBet(bal)">All In</button>
       </div>
       <button class="btn" id="rou-btn" onclick="rouSpin()" style="width:100%">DREHEN 🎡</button>
       <div class="msg" id="rou-msg" style="font-size:16px"></div>
@@ -260,6 +268,8 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
         <button class="btn" onclick="mnB(-10)">−10</button>
         <span class="bet-num">Einsatz: <strong id="mn-bet">20</strong></span>
         <button class="btn" onclick="mnB(10)">+10</button>
+        <button class="btn btn-half" onclick="mnSetBet(Math.floor(bal/2))">50%</button>
+        <button class="btn btn-allin" onclick="mnSetBet(bal)">All In</button>
       </div>
       <button class="btn" id="mn-start" onclick="mnStart()">START</button>
       <button class="btn btn-g" id="mn-cash" onclick="mnCash()" disabled>AUSZAHLEN</button>
@@ -289,6 +299,8 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
         <span class="bet-num">Einsatz: <strong id="cr-bet">20</strong></span>
         <button class="btn" onclick="crB(1)">+1</button>
         <button class="btn" onclick="crB(10)">+10</button>
+        <button class="btn btn-half" onclick="crSetBet(Math.floor(bal/2))">50%</button>
+        <button class="btn btn-allin" onclick="crSetBet(bal)">All In</button>
       </div>
       <button class="btn" id="cr-start" onclick="crStart()">START 🚀</button>
       <button class="btn btn-g" id="cr-cash" onclick="crCash()" disabled>CASHOUT</button>
@@ -323,6 +335,8 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
       <span class="bet-num">Einsatz: <strong id="dc-bet">10</strong></span>
       <button class="btn" onclick="dcB(1)">+1</button>
       <button class="btn" onclick="dcB(10)">+10</button>
+      <button class="btn btn-half" onclick="dcSetBet(Math.floor(bal/2))">50%</button>
+      <button class="btn btn-allin" onclick="dcSetBet(bal)">All In</button>
       <button class="btn" id="dc-btn" onclick="dcRoll()">WÜRFELN 🎲</button>
     </div>
   </div>
@@ -340,6 +354,8 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
         <button class="btn" onclick="plB(-10)">−10</button>
         <span class="bet-num">Einsatz: <strong id="pl-bet">10</strong></span>
         <button class="btn" onclick="plB(10)">+10</button>
+        <button class="btn btn-half" onclick="plSetBet(Math.floor(bal/2))">50%</button>
+        <button class="btn btn-allin" onclick="plSetBet(bal)">All In</button>
       </div>
       <div style="font-size:13px;color:#888;margin-bottom:6px">Risiko:</div>
       <button class="risk-btn sel" id="risk-low" onclick="setRisk('low',this)">🟢 Niedrig</button>
@@ -358,16 +374,19 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
 // ═══════════════════════════════════════════
 // GLOBAL
 // ═══════════════════════════════════════════
-let bal = 1000;
+let bal = parseInt(localStorage.getItem('royalcasino_bal')) || 1000;
+document.getElementById('balance-val').textContent = bal;
 
 function setbal(v){
   bal = Math.max(0, v);
   document.getElementById('balance-val').textContent = bal;
+  localStorage.setItem('royalcasino_bal', bal);
   if(bal===0){
     setTimeout(()=>{
       alert('Keine Chips mehr! Du bekommst 1000 Chips geschenkt 🎁');
       bal=1000;
       document.getElementById('balance-val').textContent=1000;
+      localStorage.setItem('royalcasino_bal', 1000);
     },400);
   }
 }
@@ -395,6 +414,7 @@ const SPY={'💎💎💎':100,'7️⃣7️⃣7️⃣':50,'⭐⭐⭐':20,'🍇�
 let slBetV=10, slSpin=false;
 
 function slBet(d){ slBetV=Math.max(1,Math.min(bal,slBetV+d)); document.getElementById('sl-bet').textContent=slBetV; }
+function slSetBet(v){ slBetV=Math.max(1,Math.min(bal,Math.max(1,v))); document.getElementById('sl-bet').textContent=slBetV; }
 
 function wrand(){ let t=SWT.reduce((a,b)=>a+b,0),r=Math.random()*t; for(let i=0;i<SYM.length;i++){r-=SWT[i];if(r<=0)return SYM[i];} return SYM[0]; }
 
@@ -446,6 +466,7 @@ const SUITS=['♠','♥','♦','♣'], RANKS=['A','2','3','4','5','6','7','8','9
 let bjDeck=[],bjPH=[],bjDH=[],bjBetV=20,bjOrig=20,bjActive=false;
 
 function bjB(d){ if(!bjActive){bjBetV=Math.max(1,Math.min(bal,bjBetV+d)); document.getElementById('bj-bet').textContent=bjBetV;} }
+function bjSetBet(v){ if(!bjActive){bjBetV=Math.max(1,Math.min(bal,Math.max(1,v))); document.getElementById('bj-bet').textContent=bjBetV;} }
 
 function mkDeck(){
   const d=[];
@@ -556,6 +577,7 @@ const BOARD_ROWS=[[3,6,9,12,15,18,21,24,27,30,33,36],[2,5,8,11,14,17,20,23,26,29
 let rouBet=10,rouBetType=null,rouSpinning=false,whlRot=0;
 
 function rouB(d){ rouBet=Math.max(1,Math.min(bal,rouBet+d)); document.getElementById('rou-bet').textContent=rouBet; }
+function rouSetBet(v){ rouBet=Math.max(1,Math.min(bal,Math.max(1,v))); document.getElementById('rou-bet').textContent=rouBet; }
 
 function rouSel(type,label,el){
   rouBetType=type;
@@ -626,6 +648,7 @@ function rouSpin(){
 let mnBet=20,mnActive=false,mnGrid=[],mnRev=0,mnCount=3;
 
 function mnB(d){ mnBet=Math.max(1,Math.min(bal,mnBet+d)); document.getElementById('mn-bet').textContent=mnBet; }
+function mnSetBet(v){ if(!mnActive){mnBet=Math.max(1,Math.min(bal,Math.max(1,v))); document.getElementById('mn-bet').textContent=mnBet;} }
 
 function mnMult(rev,mines){
   if(rev===0) return 1.0;
@@ -710,6 +733,7 @@ renderMG();
 let crBet=20,crActive=false,crMult=1.0,crPoint=1.0,crTimer=null,crHist=[];
 
 function crB(d){ crBet=Math.max(1,Math.min(bal,crBet+d)); document.getElementById('cr-bet').textContent=crBet; }
+function crSetBet(v){ if(!crActive){crBet=Math.max(1,Math.min(bal,Math.max(1,v))); document.getElementById('cr-bet').textContent=crBet;} }
 
 function crGenPoint(){
   const r=Math.random();
@@ -777,6 +801,7 @@ const DOTS={1:[0,0,0,0,1,0,0,0,0],2:[1,0,0,0,0,0,0,0,1],3:[1,0,0,0,1,0,0,0,1],4:
 let dcBet=10,dcType=null,dcRolling=false;
 
 function dcB(d){ dcBet=Math.max(1,Math.min(bal,dcBet+d)); document.getElementById('dc-bet').textContent=dcBet; }
+function dcSetBet(v){ dcBet=Math.max(1,Math.min(bal,Math.max(1,v))); document.getElementById('dc-bet').textContent=dcBet; }
 function dcSel(t,el){ dcType=t; document.querySelectorAll('.dbet').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); }
 
 function drawDie(id,v){
@@ -830,6 +855,7 @@ let plBet=10,plRisk='low',plRunning=false;
 const ROWS=8,COLS_AT_BOTTOM=9;
 
 function plB(d){ plBet=Math.max(1,Math.min(bal,plBet+d)); document.getElementById('pl-bet').textContent=plBet; }
+function plSetBet(v){ plBet=Math.max(1,Math.min(bal,Math.max(1,v))); document.getElementById('pl-bet').textContent=plBet; }
 function setRisk(r,btn){ plRisk=r; document.querySelectorAll('.risk-btn').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); showMultInfo(); }
 
 function showMultInfo(){
