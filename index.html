@@ -125,6 +125,14 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
 @keyframes win-flash{0%,100%{opacity:1}50%{opacity:.4}}
 .flash{animation:win-flash .2s 4}
 
+/* ---- BROKE OVERLAY ---- */
+#broke-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:9999}
+#broke-box{background:linear-gradient(135deg,#1a0a00,#2d1500);border:2px solid #c8a028;border-radius:16px;padding:40px 50px;text-align:center;max-width:340px;width:90%}
+#broke-box h3{font-size:28px;color:#f0d060;margin-bottom:8px}
+#broke-box p{color:#999;font-size:14px;margin-bottom:20px}
+#broke-timer{font-size:64px;font-weight:bold;color:#e8c84a;text-shadow:0 0 20px rgba(200,160,40,.5);letter-spacing:2px;margin:10px 0}
+#broke-box small{display:block;color:#666;font-size:12px;margin-top:16px}
+
 @media(max-width:580px){
   .mg{grid-template-columns:repeat(5,52px)}
   .mc{width:52px;height:52px;font-size:24px}
@@ -370,24 +378,70 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
 
 </div><!-- /area -->
 
+<div id="broke-overlay">
+  <div id="broke-box">
+    <h3>💸 Pleite!</h3>
+    <p>Du hast alle Chips verloren.<br>Warte kurz und du bekommst neue.</p>
+    <div id="broke-timer">5:00</div>
+    <div style="color:#888;font-size:14px">bis zu deinen 100 Chips</div>
+    <small>Tipp: Geh raus, hol dir Wasser 💧</small>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════
 // GLOBAL
 // ═══════════════════════════════════════════
-let bal = parseInt(localStorage.getItem('royalcasino_bal')) || 1000;
+const BROKE_CD = 5 * 60 * 1000; // 5 Minuten
+let brokeTimer = null;
+
+const _savedBal = localStorage.getItem('royalcasino_bal');
+let bal = _savedBal !== null ? parseInt(_savedBal) : 1000;
 document.getElementById('balance-val').textContent = bal;
 
 function setbal(v){
   bal = Math.max(0, v);
   document.getElementById('balance-val').textContent = bal;
   localStorage.setItem('royalcasino_bal', bal);
-  if(bal===0){
-    setTimeout(()=>{
-      alert('Keine Chips mehr! Du bekommst 1000 Chips geschenkt 🎁');
-      bal=1000;
-      document.getElementById('balance-val').textContent=1000;
-      localStorage.setItem('royalcasino_bal', 1000);
-    },400);
+  if(bal === 0){
+    if(!localStorage.getItem('royalcasino_broke_at')){
+      localStorage.setItem('royalcasino_broke_at', Date.now());
+    }
+    const remaining = BROKE_CD - (Date.now() - parseInt(localStorage.getItem('royalcasino_broke_at')));
+    showBrokeOverlay(Math.max(0, remaining));
+  }
+}
+
+function showBrokeOverlay(remaining){
+  document.getElementById('broke-overlay').style.display = 'flex';
+  if(brokeTimer) clearInterval(brokeTimer);
+  let left = Math.ceil(remaining / 1000);
+  function tick(){
+    if(left <= 0){
+      clearInterval(brokeTimer); brokeTimer = null;
+      localStorage.removeItem('royalcasino_broke_at');
+      document.getElementById('broke-overlay').style.display = 'none';
+      setbal(100);
+      return;
+    }
+    const m = Math.floor(left / 60);
+    const s = left % 60;
+    document.getElementById('broke-timer').textContent = m + ':' + String(s).padStart(2,'0');
+    left--;
+  }
+  tick();
+  brokeTimer = setInterval(tick, 1000);
+}
+
+function initBroke(){
+  const brokeAt = parseInt(localStorage.getItem('royalcasino_broke_at')) || 0;
+  if(!brokeAt) return;
+  const remaining = BROKE_CD - (Date.now() - brokeAt);
+  if(remaining <= 0){
+    localStorage.removeItem('royalcasino_broke_at');
+    setbal(100);
+  } else {
+    showBrokeOverlay(remaining);
   }
 }
 
@@ -990,6 +1044,8 @@ function plDrop(){
 }
 
 drawPlinko(pinPos(),[]);
+
+initBroke();
 </script>
 </body>
 </html>
