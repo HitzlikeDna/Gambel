@@ -384,7 +384,7 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
     <p>Du hast alle Chips verloren.<br>Warte kurz und du bekommst neue.</p>
     <div id="broke-timer">5:00</div>
     <div style="color:#888;font-size:14px">bis zu deinen 100 Chips</div>
-    <small>Tipp: Geh raus, hol dir Wasser 💧</small>
+    <small>1 Minute Pause — dann bekommst du 100 Chips 💧</small>
   </div>
 </div>
 
@@ -392,24 +392,26 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
 // ═══════════════════════════════════════════
 // GLOBAL
 // ═══════════════════════════════════════════
-const BROKE_CD = 5 * 60 * 1000; // 5 Minuten
+const BROKE_CD = 1 * 60 * 1000; // 1 Minute
 let brokeTimer = null;
 
 const _savedBal = localStorage.getItem('royalcasino_bal');
 let bal = _savedBal !== null ? parseInt(_savedBal) : 1000;
 document.getElementById('balance-val').textContent = bal;
 
-function setbal(v){
+function setbal(v, skipBroke){
   bal = Math.max(0, v);
   document.getElementById('balance-val').textContent = bal;
   localStorage.setItem('royalcasino_bal', bal);
-  if(bal === 0){
-    if(!localStorage.getItem('royalcasino_broke_at')){
-      localStorage.setItem('royalcasino_broke_at', Date.now());
-    }
-    const remaining = BROKE_CD - (Date.now() - parseInt(localStorage.getItem('royalcasino_broke_at')));
-    showBrokeOverlay(Math.max(0, remaining));
+  if(bal === 0 && !skipBroke) triggerBroke();
+}
+
+function triggerBroke(){
+  if(!localStorage.getItem('royalcasino_broke_at')){
+    localStorage.setItem('royalcasino_broke_at', Date.now());
   }
+  const remaining = BROKE_CD - (Date.now() - parseInt(localStorage.getItem('royalcasino_broke_at')));
+  showBrokeOverlay(Math.max(0, remaining));
 }
 
 function showBrokeOverlay(remaining){
@@ -489,7 +491,7 @@ function animReel(idx,final,delay){
 
 function doSpin(){
   if(slSpin||bal<slBetV) return;
-  setbal(bal-slBetV);
+  setbal(bal-slBetV, true);
   slSpin=true;
   document.getElementById('sl-btn').disabled=true;
   setMsg('sl-msg','🎰 Spinning...','info');
@@ -510,6 +512,7 @@ function doSpin(){
     } else {
       setMsg('sl-msg','Kein Gewinn — nochmal?','lose');
     }
+    if(bal===0) triggerBroke();
   },1800);
 }
 
@@ -548,7 +551,7 @@ function renderBJ(showD=false){
 function bjDeal(){
   if(bjActive||bal<bjBetV) return;
   bjOrig=bjBetV;
-  setbal(bal-bjBetV);
+  setbal(bal-bjBetV, true);
   bjDeck=mkDeck();
   bjPH=[bjDeck.pop(),bjDeck.pop()];
   bjDH=[bjDeck.pop(),bjDeck.pop()];
@@ -574,7 +577,7 @@ function bjHit(){
 
 function bjDouble(){
   if(!bjActive||bal<bjBetV) return;
-  setbal(bal-bjBetV);
+  setbal(bal-bjBetV, true);
   bjBetV*=2;
   document.getElementById('bj-bet').textContent=bjBetV;
   bjPH.push(bjDeck.pop());
@@ -620,6 +623,7 @@ function bjEnd(r){
   }
   bjBetV=bjOrig;
   document.getElementById('bj-bet').textContent=bjBetV;
+  if(bal===0) triggerBroke();
 }
 
 // ═══════════════════════════════════════════
@@ -658,7 +662,7 @@ buildBoard();
 
 function rouSpin(){
   if(rouSpinning||!rouBetType||bal<rouBet) return;
-  setbal(bal-rouBet);
+  setbal(bal-rouBet, true);
   rouSpinning=true;
   document.getElementById('rou-btn').disabled=true;
   setMsg('rou-msg','🎡 Dreht sich...','info');
@@ -693,6 +697,7 @@ function rouSpin(){
 
     rouSpinning=false;
     document.getElementById('rou-btn').disabled=false;
+    if(bal===0) triggerBroke();
   },4200);
 }
 
@@ -713,7 +718,7 @@ function mnMult(rev,mines){
 
 function mnStart(){
   if(mnActive||bal<mnBet) return;
-  setbal(bal-mnBet);
+  setbal(bal-mnBet, true);
   mnCount=parseInt(document.getElementById('mn-count').value);
   mnActive=true; mnRev=0;
   mnGrid=Array(25).fill('gem');
@@ -754,6 +759,7 @@ function mnClick(i){
     document.getElementById('mn-count').disabled=false;
     document.getElementById('mn-mult').textContent='0.00×';
     setMsg('mn-msg','💥 Mine! Alles verloren.','lose');
+    if(bal===0) triggerBroke();
   } else {
     c.classList.add('gem'); c.textContent='💎';
     mnRev++;
@@ -797,7 +803,7 @@ function crGenPoint(){
 
 function crStart(){
   if(crActive||bal<crBet) return;
-  setbal(bal-crBet);
+  setbal(bal-crBet, true);
   crActive=true; crMult=1.0;
   crPoint=crGenPoint();
   document.getElementById('cr-start').disabled=true;
@@ -828,6 +834,7 @@ function crCrash(){
   document.getElementById('cr-rocket').style.transform='scale(1)';
   setMsg('cr-msg',`💥 CRASH bei ${crPoint.toFixed(2)}×!`,'lose');
   addCrHist(crPoint.toFixed(2)+'×',false);
+  if(bal===0) triggerBroke();
 }
 
 function crCash(){
@@ -864,7 +871,7 @@ function drawDie(id,v){
 
 function dcRoll(){
   if(dcRolling||!dcType||bal<dcBet) return;
-  setbal(bal-dcBet);
+  setbal(bal-dcBet, true);
   dcRolling=true;
   document.getElementById('dc-btn').disabled=true;
   document.getElementById('dc-sum').textContent='';
@@ -892,6 +899,7 @@ function dcRoll(){
       else setMsg('dc-msg',`😞 Verloren. ${v1}+${v2}=${sum}`,'lose');
       dcRolling=false;
       document.getElementById('dc-btn').disabled=false;
+      if(bal===0) triggerBroke();
     }
   },70);
 }
@@ -978,7 +986,7 @@ function drawPlinko(balls,activeBalls){
 
 function plDrop(){
   if(plRunning||bal<plBet) return;
-  setbal(bal-plBet);
+  setbal(bal-plBet, true);
   plRunning=true;
   document.getElementById('pl-btn').disabled=true;
   setMsg('pl-msg','🎯 Fällt...','info');
@@ -1027,6 +1035,7 @@ function plDrop(){
       setbal(bal+pay);
       setMsg('pl-msg',`${m>=1?'🎉':'😞'} ${m}× → ${pay>=plBet?'+':'-'}${Math.abs(pay-plBet)} Chips`,(pay>=plBet?'win':'lose'));
       drawPlinko(pins,[]);
+      if(bal===0) triggerBroke();
       return;
     }
     const from=path[step], to=path[step+1];
