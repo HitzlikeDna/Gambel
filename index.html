@@ -422,9 +422,9 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
   <div id="broke-box">
     <h3>💸 Pleite!</h3>
     <p>Du hast alle Chips verloren.<br>Warte kurz und du bekommst neue.</p>
-    <div id="broke-timer">5:00</div>
+    <div id="broke-timer">0:01</div>
     <div style="color:#888;font-size:14px">bis zu deinen 100 Chips</div>
-    <small>1 Minute Pause — dann bekommst du 100 Chips 💧</small>
+    <small>1 Pause — dann bekommst du 100 Chips 💧</small>
   </div>
 </div>
 
@@ -432,7 +432,7 @@ canvas#plinko-canvas{background:#050510;border:1px solid #222;border-radius:8px;
 // ═══════════════════════════════════════════
 // GLOBAL
 // ═══════════════════════════════════════════
-const BROKE_CD = 10 * 1000; // 1 Minute
+const BROKE_CD = 1 * 1000; // 1 sec
 let brokeTimer = null;
 
 const _savedBal = localStorage.getItem('royalcasino_bal');
